@@ -1,0 +1,143 @@
+---
+title: "ESG ETF"
+author: "Yuan Lee"
+date: "2024-05-15"
+output:
+  word_document: default
+  html_document: default
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+```{r}
+#Prices
+library(quantmod)
+symbols <- c("ESGU", "ESGD", "ESGV", "DSI", "ESGE", "VSGX", "SUSA", "XOM", "CL=F", "NG=F", "HG=F")
+prices <- list()
+for (symbol in symbols) {
+  price <- getSymbols(symbol, from="2019-01-01",to="2023-12-31", auto.assign=FALSE,periodicity = 'daily')
+  prices[[symbol]]<-price[,6]
+}
+```
+```{r}
+model<-lm(prices$ESGU~prices$`CL=F`[1:1258])
+modelsummary<-summary(model)
+modelsummary$adj.r.squared
+modelsummary$coefficients[2]
+```
+
+```{r}
+#Crude Oil
+oil_corr<-list()
+oil_cov<-list()
+oil_r2<-list()
+oil_pvalue<-list()
+oil_coef<-list()
+
+for (symbol in symbols[1:8]){
+  oil_cov[[symbol]]<-cov(prices[[symbol]],prices$`CL=F`[1:length(prices[[symbol]])])
+  oil_corr[[symbol]]<-cor(prices[[symbol]],prices$`CL=F`[1:length(prices[[symbol]])])
+  model<-lm(prices[[symbol]]~prices$`CL=F`[1:length(prices[[symbol]])])
+  modelsummary<-summary(model)
+  oil_r2[[symbol]]<-modelsummary$adj.r.squared
+  oil_coef[[symbol]]<-modelsummary$coefficients[2]
+  oil_pvalue[[symbol]]<-modelsummary$coefficients[8]
+  
+}
+
+```
+
+```{r}
+#Natural Gas
+gas_corr<-list()
+gas_cov<-list()
+gas_r2<-list()
+gas_pvalue<-list()
+gas_coef<- list()
+
+for (symbol in symbols[1:8]){
+  gas_cov[[symbol]]<-cov(prices[[symbol]],prices$`NG=F`[1:length(prices[[symbol]])])
+  gas_corr[[symbol]]<-cor(prices[[symbol]],prices$`NG=F`[1:length(prices[[symbol]])])
+  model<-lm(prices[[symbol]]~prices$`NG=F`[1:length(prices[[symbol]])])
+  modelsummary<-summary(model)
+  gas_r2[[symbol]]<-modelsummary$adj.r.squared
+  gas_coef[[symbol]]<-modelsummary$coefficients[2]
+  gas_pvalue[[symbol]]<-modelsummary$coefficients[8]
+}
+```
+
+```{r}
+#Copper
+copper_corr<-list()
+copper_cov<-list()
+copper_r2<-list()
+copper_pvalue<-list()
+copper_coef<-list()
+for (symbol in symbols[1:8]){
+  copper_cov[[symbol]]<-cov(prices[[symbol]],prices$`HG=F`[1:length(prices[[symbol]])])
+  copper_corr[[symbol]]<-cor(prices[[symbol]],prices$`HG=F`[1:length(prices[[symbol]])])
+  model<-lm(prices[[symbol]]~prices$`HG=F`[1:length(prices[[symbol]])])
+  modelsummary<-summary(model)
+  copper_r2[[symbol]]<-modelsummary$adj.r.squared
+  copper_coef[[symbol]]<-modelsummary$coefficients[2]
+  copper_pvalue[[symbol]]<-modelsummary$coefficients[8]
+}
+```
+
+```{r}
+#Correlation Table
+corr_df <- data.frame(
+  Correlation_with_Oil = unlist(oil_corr),
+  Correlation_with_Natural_Gas = unlist(gas_corr),
+  Correlation_with_Copper = unlist(copper_corr),
+  stringsAsFactors = FALSE
+)
+corr_df
+```
+
+```{r}
+#Covariance Table
+cov_df <- data.frame(
+  Covariance_with_Oil = unlist(oil_cov),
+  Covariance_with_Natural_Gas = unlist(gas_cov),
+  Covariance_with_Copper = unlist(copper_cov),
+  stringsAsFactors = FALSE
+)
+cov_df
+```
+```{r}
+#R^2 Table
+r2_df <- data.frame(
+  R_squared_of_Oil = unlist(oil_r2),
+  R_squared_of_Natural_Gas = unlist(gas_r2),
+  R_squared_of_Copper = unlist(copper_r2),
+  stringsAsFactors = FALSE
+)
+r2_df
+```
+
+```{r}
+#Coefficient Table
+pvalue_df <- data.frame(
+  Coefficient_of_Oil = unlist(oil_coef),
+  Coefficient_of_Natural_Gas = unlist(gas_coef),
+  Coefficient_of_Copper = unlist(copper_coef),
+  stringsAsFactors = FALSE
+)
+pvalue_df
+```
+
+```{r}
+#P Value Table
+pvalue_df <- data.frame(
+  P_value_of_Oil = unlist(oil_pvalue),
+  P_value_of_Natural_Gas = unlist(gas_pvalue),
+  P_value_of_Copper = unlist(copper_pvalue),
+  stringsAsFactors = FALSE
+)
+pvalue_df
+```
+
+
